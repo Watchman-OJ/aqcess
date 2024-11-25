@@ -30,12 +30,9 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth'])->group(function () { 
     Route::get('/events', [EventController::class, 'index'])->name('events.index'); 
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
-    Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::get('/events/{event}/verify', [EventController::class, 'verify'])->name('events.verify');
     Route::get('/events/{event}/edit', [EventController::class, 'edit'])->name('events.edit');
-    Route::put('/events/{event}/update', [EventController::class, 'update'])->name('events.update');
-    Route::delete('/events/{event}/destroy', [EventController::class, 'deleteEvent'])->name('events.deleteEvent');
     Route::get('/events/{event}/guest-list', [EventController::class, 'guestList'])->name('events.guestList');
     Route::get('/events/{event}/add-guest', [EventController::class, 'AddGuest'])->name('events.addGuest');
     Route::post('/events/{event}/add-guest', [EventController::class, 'storeGuest'])->name('events.storeGuest');

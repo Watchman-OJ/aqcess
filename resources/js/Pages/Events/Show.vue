@@ -15,17 +15,15 @@
                 </button>
             </Link>
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <p class="mb-2" v-if="event.description"> {{ event.description }} </p>
-                <p class="mb-2"><strong>Location:</strong> {{ event.location }} </p>
-                <p class="mb-2"><strong>Date:</strong> {{ event.date }}</p>
-                <p class="mb-2" v-if="event.time"><strong>Time:</strong> {{ event.time }} </p>
+                <!-- Dynamically display event fields -->
+                 <div v-for="(value, key) in event fields" :key="key" class="mb-2">
+                    <strong>{{ key }}:</strong> {{ value }}
+                 </div>
                 <p class="mb-2"><strong>Guests:</strong> {{ event.guests_count }}</p>
                 <p class="mb-2"><strong>Partners:</strong> {{ event.partner_count }} </p>
 
                 <div v-if="localQrCode" class="my-4">
-                    <h3 class="text-xl font-semibold mb-2">
-                    QR Code
-                    </h3>
+                    <h3 class="text-xl font-semibold mb-2">QR Code</h3>
                     <img :src="localQrCode" alt="QR Code">
                 </div>
 

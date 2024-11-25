@@ -12,11 +12,11 @@ class Event extends Model
     protected $fillable = [
         'user_id',
         'title',
-        'date',
-        'time',
-        'location',
-        'description',
-        'check_in_option',
+        'fields',
+    ];
+
+    protected $casts = [
+        'fields' => 'array',
     ];
 
     public function guests()
