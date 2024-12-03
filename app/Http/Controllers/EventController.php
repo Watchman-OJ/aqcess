@@ -33,16 +33,29 @@ class EventController extends Controller
         ]); 
     } 
 
+    public function create() 
+    {
+        return inertia('Events/Create');
+    }
+
     public function store(Request $request) 
     { 
         $validateData = $request->validate([ 
             'title' => 'required|string|max:255', 
-            'date' => 'required|date', 
-            'time' => 'nullable|date_format:H:i', 
-            'location' => 'nullable|string|max:255', 
-            'description' => 'nullable|string|max:500', 
-            'check_in_option' => 'required|string|in:Pass,Qr Code', 
+            'category' => 'required|string|max:255',
+            'eventType' => 'required|string',
+            'startDate' => 'required|date', 
+            'startTime' => 'nullable|date_format:H:i', 
+            'eventDays' => 'required_if:eventType,multiple|array',
+            'timezone' => 'required|string',
+            'location' => 'nullable|string|max:255',
         ]); 
+
+        // Encode eventDays to JSON before storing in database
+        if (isset($validateData['eventDays'])) {
+            $validateData['eventDays'] = json_encode($validateData['eventDays']);
+        }
+
 
         $event = Event::create([ 
             'user_id' => auth()->id(),
@@ -51,10 +64,12 @@ class EventController extends Controller
 
         // Generate QR code and cache it if the check-in ption is QR Code
         $qrCode = $this->qrCodeService->generateEventQrCode(route('events.verify', $event->id));
-
         Redis::set('event_qr_code_' . $event->id, base64_encode($qrCode));
 
-        return redirect()->route('events.index'); 
+        return response()->json([
+            'id' => $event->id,
+            'message' => 'Event created successfully'
+        ]);
     }
 
     public function verify($id)
@@ -84,11 +99,6 @@ class EventController extends Controller
         ]);
     }
 
-    public function create() 
-    { 
-        return Inertia::render('Events/Create'); 
-    }
-
     // Show the form for editing an event (optional) 
     public function edit(Event $event) 
     { 
@@ -106,11 +116,10 @@ class EventController extends Controller
 
         $request->validate([ 
             'title' => 'required|string|max:255', 
-            'date' => 'required|date', 
-            'time' => 'nullable|date_format:H:i', 
+            'startDate' => 'required|date', 
+            'endDate' => 'nullable|date',
+            'startTime' => 'nullable|date_format:H:i', 
             'location' => 'nullable|string|max:255', 
-            'description' => 'nullable|string|max:500', 
-            'check_in_option' => 'required|string|in:Pass,Qr Code', 
         ]);
 
         $event->update($request->all()); 

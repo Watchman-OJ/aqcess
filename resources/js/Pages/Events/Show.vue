@@ -7,7 +7,15 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </Link> -->
-                <h1 class="text-3xl font-bold"> {{ event.title }} </h1>
+                <div v-if="successMessage" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert"> 
+                    <strong class="font-bold">Success!</strong> 
+                    <span class="block sm:inline">{{ successMessage }}</span> 
+                    <span @click="closeMessage" class="absolute top-0 bottom-0 right-0 px-4 py-3"> 
+                        <svg class="fill-current h-6 w-6 text-green-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                            <path d="M14.348 5.652a1 1 0 1 0-1.414-1.414L10 7.586 7.066 4.652a1 1 0 0 0-1.414 1.414l2.934 2.934-2.934 2.934a1 1 0 0 0 1.414 1.414L10 12.414l2.934 2.934a1 1 0 1 0 1.414-1.414l-2.934-2.934 2.934-2.934z"/>
+                        </svg> 
+                    </span> 
+                </div>
             </div>
             <Link :href="route('events.guestList', { event: event.id })">
                 <button class="absoute top-0 right-0 mr-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
@@ -15,11 +23,19 @@
                 </button>
             </Link>
             <div class="bg-white p-6 rounded-lg shadow-md">
-                <!-- Dynamically display event fields -->
-                 <div v-for="(value, key) in event fields" :key="key" class="mb-2">
-                    <strong>{{ key }}:</strong> {{ value }}
-                 </div>
-                <p class="mb-2"><strong>Guests:</strong> {{ event.guests_count }}</p>
+                <h1 class="text-3xl font-bold"> {{ event.title }} </h1>
+                <div v-if="event.eventType === 'single'" > 
+                    <p><strong>Start Date:</strong> {{ event.startDate }}</p> 
+                    <p><strong>Start Time:</strong> {{ event.startTime }}</p> 
+                    <p><strong>Timezone:</strong> {{ event.timezone }}</p> 
+                </div> 
+                <div v-if="event.eventType === 'multiple'" > 
+                    <p><strong>Days:</strong> {{ event.eventDays.join(', ') }}</p> 
+                    <p><strong>Start Time:</strong> {{ event.startTime }}</p> 
+                    <p><strong>Timezone:</strong> {{ event.timezone }}</p> 
+                </div> 
+                <p><strong>Location:</strong> {{ event.location }}</p> 
+                <p><strong>Guests:</strong> {{ event.guests_count }}</p>
                 <p class="mb-2"><strong>Partners:</strong> {{ event.partner_count }} </p>
 
                 <div v-if="localQrCode" class="my-4">
@@ -47,7 +63,7 @@
 </template>
 
 <script>
-import { Link } from '@inertiajs/inertia-vue3';
+import { Link, usePage } from '@inertiajs/inertia-vue3';
 import { ref } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
@@ -71,8 +87,23 @@ export default {
     },
     data() {
         return {
+            successMessage: '',
             localQrCode: this.qrCode,
         };
+    },
+    mounted() { 
+        const { message } = this.$route.query; 
+        if (message) { 
+            this.successMessage = message; 
+            setTimeout(() => { 
+                this.successMessage = ''; 
+            }, 5000); 
+        } 
+    }, 
+    methods: { 
+        closeMessage() { 
+            this.successMessage = ''; 
+        }
     },
     setup(props) {
         const event = ref(props.event);

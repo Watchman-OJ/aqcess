@@ -12,11 +12,13 @@ class Event extends Model
     protected $fillable = [
         'user_id',
         'title',
-        'fields',
-    ];
-
-    protected $casts = [
-        'fields' => 'array',
+        'category',
+        'eventType',
+        'startDate',
+        'startTime',
+        'eventDays',
+        'timezone',
+        'location',
     ];
 
     public function guests()
