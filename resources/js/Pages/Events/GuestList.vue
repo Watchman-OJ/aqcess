@@ -10,11 +10,6 @@
                             Add Guest
                         </button>
                     </Link>
-                    <!-- <Link :href="route('events.uniqueId')">
-                        <button class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">
-                            Generate Unique ID
-                        </button>
-                    </Link> -->
                 </div>
             </div>
             
