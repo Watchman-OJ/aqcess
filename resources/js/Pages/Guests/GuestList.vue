@@ -5,21 +5,17 @@
             <div v-if="!hasGuests" class="flex flex-col items-center justify-center h-full">
                 <p class="mt-4 text-lg text-gray-500">No Guest. Click below to add your first or generate unique ID!</p>
                 <div class="flex space-x-4 mt-4">
-                    <Link :href="route('events.addGuest', event.id)">
-                        <button class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">
-                            Add Guest
-                        </button>
-                    </Link>
+                    <button @click="addGuest" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">
+                        Add Guest
+                    </button>
                 </div>
             </div>
             
             
             <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <Link :href="route('events.addGuest', event.id)">
-                    <button class="absolute top-12 right-2 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 mt-4">
-                        Add Guest
-                    </button>
-                </Link>
+                <button @click="addGuest" class="absolute top-12 right-2 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 mt-4">
+                    Add Guest
+                </button>
                 <ul>
                     <li v-for="guest in guests" :key="guest.id" class="mt-4" >
                         <div class="cursor-pointer" @click="viewGuest(guest)">
@@ -38,17 +34,15 @@
 </template> 
 
 <script>
-import { Link } from '@inertiajs/inertia-vue3';
 import { Inertia } from '@inertiajs/inertia';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import AddGuest from './AddGuest.vue';
+import AddGuestMethod from '../Guests/AddGuestMethod.vue';
 
 
 export default {
     components: {
-        Link,
         AuthenticatedLayout,
-        AddGuest
+        AddGuestMethod
     },
     props: {
         event: {
@@ -65,9 +59,13 @@ export default {
         },    
     },
     methods: {
-            viewGuest(guest) {
-                Inertia.get(route('events.viewGuest', { event: this.event.id, guest: guest.id}));
-            }
-        }
+        addGuest() {
+            this.$router.push({ name: 'addGuest', params: {event: this.event.id } });
+        },
+        viewGuest(guest) {
+            Inertia.get(route('events.viewGuest', { event: this.event.id, guest: guest.id}));
+        }          
+    }
+
 }
 </script>

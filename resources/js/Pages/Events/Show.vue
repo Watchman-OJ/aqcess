@@ -67,7 +67,7 @@ import { Link } from '@inertiajs/inertia-vue3';
 import { ref } from 'vue';
 import { Inertia } from '@inertiajs/inertia';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import GuestList from './GuestList.vue';
+import GuestList from '../Guests/GuestList.vue';
 
 export default {
     components: {

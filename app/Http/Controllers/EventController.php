@@ -131,7 +131,7 @@ class EventController extends Controller
     {
         $guests = $event->guests;
         $hasGuests = $guests->isNotEmpty();
-        return Inertia::render('Events/GuestList', [
+        return Inertia::render('Guests/GuestList', [
             'event' => $event,
             'guests' => $guests,
             'hasGuests' => $hasGuests,
@@ -140,7 +140,7 @@ class EventController extends Controller
 
     public function AddGuest(Event $event) 
     {
-        return Inertia::render('Events/AddGuest', ['event' => $event]);
+        return Inertia::render('Guests/AddGuest', ['event' => $event]);
     }
 
     public function storeGuest(Request $request, Event $event)
@@ -202,7 +202,7 @@ class EventController extends Controller
             return back()->withErrors(['qrCode' => 'Failed to retrieve guest QR code.']); 
         } 
 
-        return Inertia::render('Events/GuestQrCode', [ 
+        return Inertia::render('Guests/GuestQrCode', [ 
             'guest' => $guest, 
             'qrCode' => $guestQrCode
         ]);
@@ -210,7 +210,7 @@ class EventController extends Controller
 
     public function viewGuest(Event $event, Guest $guest)
     {
-        return Inertia::render('Events/ViewGuest', [
+        return Inertia::render('Guests/ViewGuest', [
             'event' => $event,
             'guest' => $guest
         ]);
@@ -218,7 +218,7 @@ class EventController extends Controller
 
     public function editGuest(Guest $guest)
     {
-        return Inertia::render('Events/EditGuest', ['guest' => $guest]);
+        return Inertia::render('Guests/EditGuest', ['guest' => $guest]);
     }
 
     public function destroyGuest(Event $event, Guest $guest)
