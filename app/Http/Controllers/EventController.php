@@ -138,10 +138,22 @@ class EventController extends Controller
         ]);
     }
 
-    public function AddGuest(Event $event) 
+    public function AddGuestMethod(Event $event) 
     {
-        return Inertia::render('Guests/AddGuest', ['event' => $event]);
+        return Inertia::render('Guests/AddGuestMethod', [
+            'eventId' => $event->id,
+            'event' => $event,
+        ]);
     }
+
+    public function formHandler(Event $event)
+    {
+        return Inertia::render('Guests/FormHandler', [
+            'eventId' => $event->id,
+            'event' => $event,
+        ]);
+    }
+
 
     public function storeGuest(Request $request, Event $event)
     {

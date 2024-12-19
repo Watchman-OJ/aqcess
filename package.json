@@ -23,6 +23,7 @@
         "@inertiajs/inertia-vue3": "^0.6.0",
         "@vuepic/vue-datepicker": "^10.0.0",
         "vue-router": "^4.0.13",
+        "vuedraggable": "^2.24.3",
         "ziggy": "^2.4.0"
     }
 }

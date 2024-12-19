@@ -37,8 +37,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/events/{event}/verify', [EventController::class, 'verify'])->name('events.verify');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::get('/events/{event}/guest-list', [EventController::class, 'guestList'])->name('events.guestList');
-    Route::get('/events/{event}/add-guest', [EventController::class, 'AddGuest'])->name('events.addGuest');
-    Route::post('/events/{event}/add-guest', [EventController::class, 'storeGuest'])->name('events.storeGuest');
+    Route::get('/events/{event}/add-guest-method', [EventController::class, 'AddGuestMethod'])->name('events.addGuestMethod');
+    Route::get('/events/{event}/form-handler', [EventController::class, 'formHandler'])->name('events.formHandler');
+    // Route::post('/events/{event}/add-guest', [EventController::class, 'storeGuest'])->name('events.storeGuest');
     Route::get('/events/{event}/guest/{guest}/qr-code', [EventController::class, 'showGuestQrCode'])->name('events.guestQrCode');
     Route::get('/events/{event}/guest/{guest}', [EventController::class, 'viewGuest'])->name('events.viewGuest');
     Route::get('/events/edit-guest/{guest}', [EventController::class, 'editGuest'])->name('events.editGuest');
