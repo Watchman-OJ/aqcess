@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Guest;
+use App\Models\Form;
 use Illuminate\Http\Request;
 use Inertia\Inertia; 
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -138,6 +139,126 @@ class EventController extends Controller
         ]);
     }
 
+    public function formHandler(Request $request, Event $event)
+    {
+        return Inertia::render('Guests/FormHandler', [
+            'event' => $event,
+            'eventId' => $event->id,
+        ]);
+    }
+
+    public function handleSubmit(Request $request, Event $event)
+    {
+        $validateData = $request->validate([
+            'title' => 'required|string|max:255',
+            'fields' => 'required|array',
+            'fields.*.name' => 'required|string',
+        ]);
+
+        // Save form data in the database
+        Form::create([
+            'user_id' => auth()->id(),
+            'event_id' => $event->id,
+            'title' => $validateData['title'],
+            'fields' => $validateData['fields']
+        ]);
+
+        return redirect()->route('events.selectForm', $event);
+    }
+
+
+
+    public function selectForm(Event $event)
+    {
+        $forms = Form::where('event_id', $event->id)->get();
+
+        return Inertia::render('Guests/SelectForm', [
+            'event' => $event,
+            'eventId' => $event->id,
+            'forms' => $forms
+        ]);
+    }
+
+    public function viewForm(Event $event, Form $form) 
+    { 
+        // Fetch the form data 
+        $formData = [ 
+            'title' => $form->title, 
+            'fields' => $form->fields 
+        ]; 
+
+        // Return the form data as JSON 
+        return Inertia::render('Guests/ViewForm', [
+            'event' => $event,
+            'formId' => $form->id,
+            'formData' => $formData
+        ]);
+        // return response()->json($formData);
+
+    } 
+        // Existing methods like formHandler, etc. 
+
+    public function getFieldProperties($fieldName)
+    {
+        // Efficient data structures: PHP associative array (hash map) for lookup table
+        $lookupTable = [
+            'company' => ['label' => 'Company', 'type' => 'text', 'placeholder' => 'Enter company name', 'name' => 'company'],
+            'jobTitle' => ['label' => 'Job Title', 'type' => 'text', 'placeholder' => 'Enter job title', 'name' => 'jobTitle'],
+            'topicsOfInterest' => ['label' => 'Topics of Interest', 'type' => 'textarea', 'placeholder' => 'Enter topics of interest', 'name' => 'topicsOfInterest'],
+            'linkedIn' => ['label' => 'LinkedIn Profile', 'type' => 'url', 'placeholder' => 'Enter LinkedIn profile URL', 'name' => 'linkedIn'],
+            'website' => ['label' => 'Website', 'type' => 'url', 'placeholder' => 'Enter website URL', 'name' => 'website'],
+            'gender' => ['label' => 'Gender', 'type' => 'select', 'options' => ['Male', 'Female', 'Non-Binary'], 'name' => 'gender'],
+            'preferredDate' => ['label' => 'Preferred Date', 'type' => 'date', 'placeholder' => 'Select preferred date', 'name' => 'preferredDate'],
+            'preferredTime' => ['label' => 'Preferred Time', 'type' => 'time', 'placeholder' => 'Select preferred time', 'name' => 'preferredTime'],
+            'phone' => ['label' => 'Phone', 'type' => 'tel', 'placeholder' => 'Enter phone number', 'name' => 'phone'],
+            'address' => ['label' => 'Address', 'type' => 'text', 'placeholder' => 'Enter address', 'name' => 'address'],
+            'zipCode' => ['label' => 'Zip Code', 'type' => 'text', 'placeholder' => 'Enter zip code', 'name' => 'zipCode'],
+            'country' => ['label' => 'Country', 'type' => 'select', 'options' => ['Country1', 'Country2', 'Country3'], 'name' => 'country'],
+            'contactMethod' => ['label' => 'Preferred Contact Method', 'type' => 'select', 'options' => ['Email', 'Phone', 'SMS'], 'name' => 'contactMethod'],
+            'emergencyContact' => ['label' => 'Emergency Contact', 'type' => 'tel', 'placeholder' => 'Enter emergency contact number', 'name' => 'emergencyContact'],
+            'dietaryRestrictions' => ['label' => 'Dietary Restrictions', 'type' => 'text', 'placeholder' => 'Enter any dietary restrictions', 'name' => 'dietaryRestrictions'],
+            'sessionPreferences' => ['label' => 'Session Preferences', 'type' => 'select', 'options' => ['Morning Session', 'Afternoon Session', 'Networking Event'], 'name' => 'sessionPreferences'],
+            'foodPreferences' => ['label' => 'Food Preferences', 'type' => 'select', 'options' => ['Vegetarian', 'Non-Vegetarian', 'Vegan'], 'name' => 'foodPreferences'],
+            'musicRequests' => ['label' => 'Music Requests', 'type' => 'textarea', 'placeholder' => 'Enter your music requests', 'name' => 'musicRequests'],
+            'allergies' => ['label' => 'Allergies', 'type' => 'textarea', 'placeholder' => 'Enter any allergies', 'name' => 'allergies'],
+            'name' => ['label' => 'Name', 'type' => 'text', 'placeholder' => 'Enter name', 'name' => 'name'],
+            'sex' => ['label' => 'Sex', 'type' => 'text', 'placeholder' => 'Enter sex', 'name' => 'sex'],
+            'plusOne' => ['label' => 'Plus One or More', 'type' => 'number', 'placeholder' => 'Enter number of plus ones', 'name' => 'plusOne'],
+            'reasonForAppointment' => ['label' => 'Reason for Appointment', 'type' => 'textarea', 'placeholder' => 'Enter reason for appointment', 'name' => 'reasonForAppointment'],
+            'numberOfGuests' => ['label' => 'Number of Guests', 'type' => 'number', 'placeholder' => 'Enter number of guests', 'name' => 'numberOfGuests'],
+        ];
+
+        // Check the Redis cache before performing a lookup
+        $cachedField = Redis::get('field_properties_' . $fieldName);
+        if ($cachedField) {
+            return json_decode($cachedField, true);
+        }
+
+        // Fetch from the lookup table and update the Redis cache
+        if (isset($lookupTable[$fieldName])) {
+            $lookupData = $lookupTable[$fieldName];
+            Redis::set('field_properties_' . $fieldName, json_encode($lookupData)); // Store in Redis cache
+            return $lookupData;
+        }
+
+        return null; // Return null if the field name is not found
+    }
+
+    public function formSubmit(Request $request, Event $event)
+    {
+        $validateData = $request->validate([
+            'formId' => 'required|exists:forms,id',
+            'formData' => 'required|array'
+        ]);
+
+        // Process the form data (e.g., save to database)
+        // Form submission logic...
+
+        return response()->json(['message' => 'Form submitted successfully']);
+    }
+
+
+
     public function AddGuestMethod(Event $event) 
     {
         return Inertia::render('Guests/AddGuestMethod', [
@@ -145,15 +266,6 @@ class EventController extends Controller
             'event' => $event,
         ]);
     }
-
-    public function formHandler(Event $event)
-    {
-        return Inertia::render('Guests/FormHandler', [
-            'eventId' => $event->id,
-            'event' => $event,
-        ]);
-    }
-
 
     public function storeGuest(Request $request, Event $event)
     {

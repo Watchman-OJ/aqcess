@@ -49,6 +49,7 @@
 
 <script>
 import { reactive, ref, onMounted } from 'vue';
+import { Inertia } from '@inertiajs/inertia';
 
 export default {
     props: {
@@ -193,6 +194,18 @@ export default {
             emit('confirm', fields);
         }
 
+        // Fetch field properties using the getFieldProperties method from the EventController 
+        async function getFieldProperties(fieldName) {
+            try {
+                const response = await Inertia.get(`/api/fields/${fieldName}`);
+                return response.props.fieldsProperties;
+            } catch (error) {
+                console.error('Error fetching field properties:', error);
+                return null;
+            }
+        }
+        
+
         return {
             fields,
             dragIndex,
@@ -204,7 +217,8 @@ export default {
             dragEnter,
             dragEnd,
             toggleDropdown,
-            confirmFields
+            confirmFields,
+            getFieldProperties
         };
     }
 };

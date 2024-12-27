@@ -1,21 +1,18 @@
 <template>
     <AuthenticatedLayout>
         <div class="container mx-auto p-4">
-            <customize-form
+            <FormTitle v-if="currentStep === 'formTitle'" @next="handleNext" />
+            <CustomizeForm 
+                v-if="currentStep === 'customizeForm'" 
                 :event="event"
                 :eventId="eventId"
-                @confirm="handleConfirm"
-            />
-            <new-form
-                v-if="currentStep === 'newForm'"
-                :eventId="eventId"
                 :formFields="formFields"
-                @submit="handleSubmit"
+                @confirm="handleConfirm" 
             />
-            <review-details
-                v-if="currentStep === 'review'"
-                :formFields="formFields"
-                :guestDetails="guestDetails"
+            <ReviewForm v-if="currentStep === 'reviewForm'" 
+                :formTitle="formTitle" 
+                :formFields="formFields" 
+                @save="handleSave" 
             />
         </div>
     </AuthenticatedLayout>
@@ -23,50 +20,57 @@
 
 <script>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import FormTitle from './FormTitle.vue';
 import CustomizeForm from './CustomizeForm.vue';
-import NewForm from './NewForm.vue';
-import ReviewDetails from './ReviewDetails.vue';
-import { ref } from 'vue';
+import ReviewForm from './ReviewForm.vue';
+import { Inertia } from '@inertiajs/inertia';
 
 export default {
     components: {
         AuthenticatedLayout,
+        FormTitle,
         CustomizeForm,
-        NewForm,
-        ReviewDetails
+        ReviewForm
     },
-    props: {
-        eventId: {
-            type: Number,
-            required: true
-        },
-        event: {
-            type: Object,
-            required: true
-        }
+    props: { 
+        event: { 
+            type: Object, 
+            required: true 
+    }, 
+        eventId: { 
+            type: Number, 
+            required: true 
+        } 
     },
-    setup(props) {
-        const currentStep = ref('customize');
-        const formFields = ref([]);
-        const guestDetails = ref({});
-
-        function handleConfirm(fields) {
-            formFields.value = fields;
-            currentStep.value = 'newForm';
-        }
-
-        function handleSubmit(details) {
-            guestDetails.value = details;
-            currentStep.value = 'review';
-        }
-
+    data() {
         return {
-            currentStep,
-            formFields,
-            guestDetails,
-            handleConfirm,
-            handleSubmit
+            currentStep: 'formTitle',
+            formTitle: '',
+            formFields: []
         };
+    },
+    methods: {
+        handleNext(title) {
+            this.formTitle = title;
+            this.currentStep = 'customizeForm';
+        },
+        handleConfirm(fields) {
+            this.formFields = fields;
+            this.currentStep = 'reviewForm';
+        },
+        async handleSave() {
+            try {
+                const response = await axios.post(`/events/${this.eventId}/form-handler`,{
+                    title: this.formTitle,
+                    fields: this.formFields
+                });
+                if (response.data.message === 'Form saved successfully') {
+                    Inertia.get(`/events/${this.eventId}/select-form`);
+                }       
+            } catch (error) {
+                console.error('Error saving form:', error);
+            }
+        }
     }
 };
 </script>
