@@ -1,31 +1,45 @@
 <template>
     <AuthenticatedLayout>
         <div class="container mx-auto p-4">
-            <h2 class="text-2xl font-bold mb-4">{{ formData.title }}</h2>
-            <form @submit.prevent="handleSubmit">
-                <div v-for="(field, index) in formData.fields" :key="index" class="mb-4">
+            <h2 class="text-2xl font-bold mb-4">{{ form.title }}</h2>
+            <form @submit.prevent="saveForm">
+                <div v-for="(field, index) in form.fields" :key="index" class="mb-4">
                     <label :for="field.name" class="block mb-1 font-bold">{{ field.label }}</label>
-                    <component 
-                        :is="getComponentType(field)" 
-                        v-model="formData[field.name]" 
-                        :name="field.name" 
+                    <input 
+                        v-if="field.type !== 'textarea' && field.type !== 'select'" 
+                        :type="field.type" 
                         :placeholder="field.placeholder" 
-                        :options="field.options || []" 
+                        :name="field.name" 
+                        v-model="formData[field.name]"
                         class="w-full p-2 border border-gray-300 rounded" 
                     />
+                    <textarea 
+                        v-if="field.type === 'textarea'" 
+                        :placeholder="field.placeholder" 
+                        :name="field.name" 
+                        v-model="formData[field.name]"
+                        class="w-full p-2 border border-gray-300 rounded"
+                    />
+                    <select 
+                        v-if="field.type === 'select'" 
+                        :name="field.name" 
+                        v-model="formData[field.name]"
+                        class="w-full p-2 border border-gray-300 rounded"
+                    >
+                        <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
+                    </select>
                 </div>
-                <button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Submit</button>
+                <div class="flex justify-end mt-6">
+                    <button type="submit" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Save Form</button>
+                </div>
             </form>
         </div>
     </AuthenticatedLayout>
-    
 </template>
 
 <script>
-import { ref, reactive, onMounted } from 'vue';
-import axios from 'axios';
-import { Inertia } from '@inertiajs/inertia';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import axios from 'axios';
 
 export default {
     components: {
@@ -36,77 +50,49 @@ export default {
             type: Object,
             required: true
         },
-        formId: {
+        eventId: {
             type: Number,
             required: true
         },
-        formData: {
+        form: {
             type: Object,
             required: true
         }
     },
-    setup(props) {
-        const formData = reactive({});
-
-        onMounted(() => {
-            // Initialize formData with the form fields and their default values
-            props.formData.fields.forEach(field => {
-                formData[field.name] = ''; // Initialize with empty or default values if available
-            });
-        });
-
-        function getComponentType(field) {
-            switch (field.type) {
-                case 'text':
-                case 'email':
-                case 'url':
-                case 'tel':
-                case 'date':
-                case 'time':
-                    return 'input';
-                case 'textarea':
-                    return 'textarea';
-                case 'select':
-                    return 'select';
-                default:
-                    return 'input';
+    data() {
+        return {
+            formData: {}
+        };
+    },
+    created() {
+        console.log('Form data on create:', this.form)
+        this.initializeFormData();
+    },
+    methods: {
+        initializeFormData() {
+            if (Array.isArray(this.form.fields)) {
+                for (const field of this.form.fields) {
+                    this.formData[field.name] = '';
+                }
+            } else {
+                console.error('Form fields are not an array:', this.form.fields);
             }
-        }
-
-        async function handleSubmit() {
+        },
+        async saveForm() {
             try {
-                const response = await axios.post(`/events/${props.event.id}/form-submit`, {
-                    formId: props.formId,
-                    formData: formData
+                const response = await axios.post(`/events/${this.eventId}/guests`, {
+                    ...this.formData,
+                    event_id: this.eventId,
+                    form_id: this.form.id
                 });
-                if (response.data.message === 'Form submitted successfully') {
-                    Inertia.get(`/events/${props.event.id}/thank-you`);
+                if (response.data.message === 'Guest saved successfully') {
+                    alert('Guest saved successfully');
                 }
             } catch (error) {
-                console.error('Error submitting form:', error);
+                console.error('Error saving guest:', error);
             }
         }
-
-        return {
-            formData,
-            getComponentType,
-            handleSubmit
-        };
     }
 };
 </script>
 
-<style scoped>
-.form-card {
-    background-color: #ffffff;
-    border-radius: 0.375rem;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-    padding: 1.5rem;
-}
-
-.form-card h3 {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-}
-</style>

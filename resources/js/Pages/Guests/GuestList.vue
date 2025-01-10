@@ -21,13 +21,8 @@
                 <ul> 
                     <li v-for="guest in guests" :key="guest.id" class="mt-4" > 
                         <div class="cursor-pointer" @click="viewGuest(guest)"> 
-                            <p><strong>{{ guest.name }}</strong></p> 
-                            <p v-if="guest.checked_in_at">Checked in at: {{ guest.checked_in_at }}</p> 
-                        </div> 
-                        <div class="flex items-center"> 
-                            <span v-if="guest.checked_in_at" class="text-green-500"> 
-                                <!--check mark--> 
-                            </span> 
+                            <p><strong>{{ guest.form_data.name }}</strong></p> 
+                            
                         </div> 
                     </li> 
                 </ul> 

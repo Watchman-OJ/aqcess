@@ -24,6 +24,7 @@ import FormTitle from './FormTitle.vue';
 import CustomizeForm from './CustomizeForm.vue';
 import ReviewForm from './ReviewForm.vue';
 import { Inertia } from '@inertiajs/inertia';
+import axios from 'axios';
 
 export default {
     components: {
@@ -62,7 +63,8 @@ export default {
             try {
                 const response = await axios.post(`/events/${this.eventId}/form-handler`,{
                     title: this.formTitle,
-                    fields: this.formFields
+                    fields: this.formFields,
+                    event_id: this.eventId
                 });
                 if (response.data.message === 'Form saved successfully') {
                     Inertia.get(`/events/${this.eventId}/select-form`);

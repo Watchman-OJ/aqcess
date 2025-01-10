@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\Guest;
+use App\Models\FieldConfig;
+use App\Models\FormField;
 use App\Models\Form;
 use Illuminate\Http\Request;
 use Inertia\Inertia; 
@@ -86,17 +88,49 @@ class EventController extends Controller
         $event->loadCount('guests');
 
         // Retrieve QR Code from Redis if available
-        $qrCode = Redis::get('event_qr_code' . $event->id);
-        if(!$qrCode) {
-            // Fallback if not found in cache
-            $qrCode = $this->qrCodeService->generateEventQrCode(route('events.verify', $event->id));
-            // Cache it for future use
-            Redis::set('event_qr_code_' . $event->id, $qrCode);
-        } 
+        $qrCode = $this->getQrCodeForEvent($event);
 
         return Inertia::render('Events/Show', [
             'event' => $event,
             'qrCode' => $qrCode,
+        ]);
+    }
+
+    protected function getQrCodeForEvent(Event $event)
+    {
+        // Retrieve QR Code from Redis if available
+        $qrCode = Redis::get('event_qr_code_' . $event->id);
+        \Log::info('Check for QR code retrieval: event_qr_code_' . $event->id, ['cachedQrCode' => $qrCode]);
+
+        if (!$qrCode) {
+            try {
+                $qrCode = $this->qrCodeService->generateEventQrCode(route('events.verify', $event->id));
+                \Log::info('Generated QR Code Data:', ['qrCode' => $qrCode]);
+
+                if ($qrCode) {
+                    Redis::set('event_qr_code_' . $event->id, $qrCode);
+                    \Log::info('QR Code successfully stored in Redis');
+                } else {
+                    \Log::error('QR Code generation failed: No data returned from qrCodeService');
+                }
+            } catch (\Exception $e) {
+                \Log::error('Error generating QR Code:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            }
+        }
+
+        return $qrCode;
+    }
+
+
+    public function guestTicket(Event $event, Guest $guest)
+    {
+        // Retrieve QR Code from redis if available
+        $qrCode = $this->getQrCodeForEvent($event);
+
+        return Inertia::render('Guests/GuestTicket', [
+            'event' => $event,
+            'guest' => $guest,
+            'qrCode' => $qrCode
         ]);
     }
 
@@ -130,12 +164,28 @@ class EventController extends Controller
 
     public function guestList(Event $event)
     {
-        $guests = $event->guests;
+        $guests = $event->guests->map(function ($guest) {
+            $guest->form_data = json_decode($guest->form_data, true);
+            \Log::info('Form Data:', $guest->form_data);
+            return $guest;
+        });
+
         $hasGuests = $guests->isNotEmpty();
+
         return Inertia::render('Guests/GuestList', [
             'event' => $event,
             'guests' => $guests,
             'hasGuests' => $hasGuests,
+        ]);
+    }
+
+    public function viewGuest(Event $event, Guest $guest)
+    {
+        $guest->form_data = json_decode($guest->form_data, true);
+        
+        return Inertia::render('Guests/ViewGuest', [
+            'event' => $event,
+            'guest' => $guest
         ]);
     }
 
@@ -147,26 +197,63 @@ class EventController extends Controller
         ]);
     }
 
-    public function handleSubmit(Request $request, Event $event)
+    public function getAllFields()
     {
-        $validateData = $request->validate([
-            'title' => 'required|string|max:255',
-            'fields' => 'required|array',
-            'fields.*.name' => 'required|string',
-        ]);
+        try {
+            $allFields = FormField::all()->keyBy('name');
 
-        // Save form data in the database
-        Form::create([
-            'user_id' => auth()->id(),
-            'event_id' => $event->id,
-            'title' => $validateData['title'],
-            'fields' => $validateData['fields']
-        ]);
-
-        return redirect()->route('events.selectForm', $event);
+            return response()->json($allFields);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+        
     }
 
+    public function getCategoryFields($category)
+    {
+        try {
+            $fieldConfig = FieldConfig::where('category', $category)->first();
+            if ($fieldConfig) {
+                $fields = json_decode($fieldConfig->fields, true);
+                return response()->json($fields);
+            } else {
+                return response()->json(['error' => 'Category fields not found'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+        
+    }
 
+    public function storeForm(Request $request)
+    {
+        \Log::info('storeForm called with request:', $request->all());
+
+        $validatedData = $request->validate([
+            'title' => 'required|string|max:255',
+            'fields' => 'required|array',
+            'event_id' => 'required|integer|exists:events,id'
+        ]);
+
+        \Log::info('Validated data:', $validatedData);
+
+        try {
+            $form = Form::create([
+                'title' => $validatedData['title'],
+                'user_id' => auth()->id(),
+                'event_id' => $request->event_id,
+                'fields' => json_encode($validatedData['fields'])
+            ]);
+            \Log::info('Form saved successfully:', ['form' => $form->toArray()]);
+            
+            return response()->json(['message' => 'Form saved successfully', 'form' => $form]);
+        } catch (\Exception $e) {
+            \Log::error('Error saving form:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+
+            return response()->json(['error' => 'Error saving form data'], 500);
+        }
+        
+    }
 
     public function selectForm(Event $event)
     {
@@ -179,166 +266,89 @@ class EventController extends Controller
         ]);
     }
 
+    public function getForm($id)
+    {
+        \Log::info('getForm called with ID:', ['id' => $id]);
+
+        $form = Form::find($id);
+
+        if ($form) {
+            \Log::info('Form found:', ['form' => $form->toArray()]);
+
+            $form->fields = json_decode($form->fields, true);
+            \Log::info('Decode form fields:', ['fields' => $form->fields]);
+            return response()->json($form);
+        } else {
+            \Log::error('Form not found with ID:', ['id' => $id]);
+            return response()->json(['error' => 'Form not found'], 404);
+        }
+    }
+
     public function viewForm(Event $event, Form $form) 
     { 
-        // Fetch the form data 
-        $formData = [ 
-            'title' => $form->title, 
-            'fields' => $form->fields 
-        ]; 
+        \Log::info('viewForm called with Event and Form:', ['event' => $event->toArray(), 'form' => $form->toArray()]);
 
-        // Return the form data as JSON 
+        $form->fields = json_decode($form->fields, true);
+
+        if (is_array($form->fields)) { 
+            \Log::info('Decoded form fields:', ['fields' => $form->fields]); 
+        } else { 
+            \Log::error('Failed to decode form fields:', ['fields' => $form->fields]); 
+        }
+
         return Inertia::render('Guests/ViewForm', [
             'event' => $event,
-            'formId' => $form->id,
-            'formData' => $formData
-        ]);
-        // return response()->json($formData);
-
-    } 
-        // Existing methods like formHandler, etc. 
-
-    public function getFieldProperties($fieldName)
-    {
-        // Efficient data structures: PHP associative array (hash map) for lookup table
-        $lookupTable = [
-            'company' => ['label' => 'Company', 'type' => 'text', 'placeholder' => 'Enter company name', 'name' => 'company'],
-            'jobTitle' => ['label' => 'Job Title', 'type' => 'text', 'placeholder' => 'Enter job title', 'name' => 'jobTitle'],
-            'topicsOfInterest' => ['label' => 'Topics of Interest', 'type' => 'textarea', 'placeholder' => 'Enter topics of interest', 'name' => 'topicsOfInterest'],
-            'linkedIn' => ['label' => 'LinkedIn Profile', 'type' => 'url', 'placeholder' => 'Enter LinkedIn profile URL', 'name' => 'linkedIn'],
-            'website' => ['label' => 'Website', 'type' => 'url', 'placeholder' => 'Enter website URL', 'name' => 'website'],
-            'gender' => ['label' => 'Gender', 'type' => 'select', 'options' => ['Male', 'Female', 'Non-Binary'], 'name' => 'gender'],
-            'preferredDate' => ['label' => 'Preferred Date', 'type' => 'date', 'placeholder' => 'Select preferred date', 'name' => 'preferredDate'],
-            'preferredTime' => ['label' => 'Preferred Time', 'type' => 'time', 'placeholder' => 'Select preferred time', 'name' => 'preferredTime'],
-            'phone' => ['label' => 'Phone', 'type' => 'tel', 'placeholder' => 'Enter phone number', 'name' => 'phone'],
-            'address' => ['label' => 'Address', 'type' => 'text', 'placeholder' => 'Enter address', 'name' => 'address'],
-            'zipCode' => ['label' => 'Zip Code', 'type' => 'text', 'placeholder' => 'Enter zip code', 'name' => 'zipCode'],
-            'country' => ['label' => 'Country', 'type' => 'select', 'options' => ['Country1', 'Country2', 'Country3'], 'name' => 'country'],
-            'contactMethod' => ['label' => 'Preferred Contact Method', 'type' => 'select', 'options' => ['Email', 'Phone', 'SMS'], 'name' => 'contactMethod'],
-            'emergencyContact' => ['label' => 'Emergency Contact', 'type' => 'tel', 'placeholder' => 'Enter emergency contact number', 'name' => 'emergencyContact'],
-            'dietaryRestrictions' => ['label' => 'Dietary Restrictions', 'type' => 'text', 'placeholder' => 'Enter any dietary restrictions', 'name' => 'dietaryRestrictions'],
-            'sessionPreferences' => ['label' => 'Session Preferences', 'type' => 'select', 'options' => ['Morning Session', 'Afternoon Session', 'Networking Event'], 'name' => 'sessionPreferences'],
-            'foodPreferences' => ['label' => 'Food Preferences', 'type' => 'select', 'options' => ['Vegetarian', 'Non-Vegetarian', 'Vegan'], 'name' => 'foodPreferences'],
-            'musicRequests' => ['label' => 'Music Requests', 'type' => 'textarea', 'placeholder' => 'Enter your music requests', 'name' => 'musicRequests'],
-            'allergies' => ['label' => 'Allergies', 'type' => 'textarea', 'placeholder' => 'Enter any allergies', 'name' => 'allergies'],
-            'name' => ['label' => 'Name', 'type' => 'text', 'placeholder' => 'Enter name', 'name' => 'name'],
-            'sex' => ['label' => 'Sex', 'type' => 'text', 'placeholder' => 'Enter sex', 'name' => 'sex'],
-            'plusOne' => ['label' => 'Plus One or More', 'type' => 'number', 'placeholder' => 'Enter number of plus ones', 'name' => 'plusOne'],
-            'reasonForAppointment' => ['label' => 'Reason for Appointment', 'type' => 'textarea', 'placeholder' => 'Enter reason for appointment', 'name' => 'reasonForAppointment'],
-            'numberOfGuests' => ['label' => 'Number of Guests', 'type' => 'number', 'placeholder' => 'Enter number of guests', 'name' => 'numberOfGuests'],
-        ];
-
-        // Check the Redis cache before performing a lookup
-        $cachedField = Redis::get('field_properties_' . $fieldName);
-        if ($cachedField) {
-            return json_decode($cachedField, true);
-        }
-
-        // Fetch from the lookup table and update the Redis cache
-        if (isset($lookupTable[$fieldName])) {
-            $lookupData = $lookupTable[$fieldName];
-            Redis::set('field_properties_' . $fieldName, json_encode($lookupData)); // Store in Redis cache
-            return $lookupData;
-        }
-
-        return null; // Return null if the field name is not found
-    }
-
-    public function formSubmit(Request $request, Event $event)
-    {
-        $validateData = $request->validate([
-            'formId' => 'required|exists:forms,id',
-            'formData' => 'required|array'
-        ]);
-
-        // Process the form data (e.g., save to database)
-        // Form submission logic...
-
-        return response()->json(['message' => 'Form submitted successfully']);
-    }
-
-
-
-    public function AddGuestMethod(Event $event) 
-    {
-        return Inertia::render('Guests/AddGuestMethod', [
             'eventId' => $event->id,
-            'event' => $event,
+            'form' => $form
         ]);
-    }
-
-    public function storeGuest(Request $request, Event $event)
-    {
-        $validateData = $request->validate([
-            'name' => 'required|string|max:255',
-            'sex' => 'required|in:male,female,other',
-            'guest_cap' => 'required|integer|min:1',
-            'note' => 'nullable|string|max:500',
-        ]);
-
-        $guest = Guest::create([ 
-            'event_id' => $event->id, 
-            ...$validateData, 
-        ]); 
-
-        // Retrieve event QR code from redis
-        $eventQrCode = Redis::get('event_qr_code_' . $event->id);
         
-        if ($eventQrCode) { 
-            Log::info('Event QR code retrieved from Redis', ['eventId' => $event->id, 'eventQrCode' => $eventQrCode]); 
-        } else { 
-            Log::error('Failed to retrieve event QR code from Redis', ['eventId' => $event->id]); 
+    } 
+
+    public function saveGuest(Request $request, Event $event)
+    {
+        \Log::info('saveGuest called with request:', $request->all());
+
+        // Retrieve the specific form fields for the current form and user
+        $form = Form::where('id', $request->form_id)
+                    ->where('event_id', $event->id)
+                    ->where('user_id', auth()->id())
+                    ->first();
+
+        if (!$form) {
+            return response()->json(['error' => 'Form not found'], 404);
         }
 
-        // Ensure only essential data is combined
-        $baseURL = 'https://example.com/guest/';
-        $dataToEncode = $baseURL . $guest->id;
+        $formFields = json_decode($form->fields, true);
 
-        // Log length of data being encoded
-        Log::info('Length of data being encoded', ['dataLength' =>strlen($dataToEncode)]);
+        // Generate validation rules dynamically based on form fields
+        $validationRules = [];
+        $fillableFields = [];
+        foreach ($formFields as $field) {
+            // Set validation rules based on field type or other criteria
+            $validationRules[$field['name']] = 'required|string|max:255'; // Customize rules as needed
+            $fillableFields[] = $field['name'];
+        }
 
-        // Generate guest QR code
-        $guestQrCode = $this->qrCodeService->generateEventQrCode($dataToEncode);
-        Log::info('Generated guest QR code', ['guestQrCode' => substr($guestQrCode, 0, 50) . '...']);
+        $validatedData = $request->validate($validationRules);
 
-        // Store guest Qr code in Redis
-        Redis::set('guest_qr_code_' . $guest->id, $guestQrCode);
-        Log::info('Stored guest QR code in Redis', ['key' => 'guest_qr_code_' . $guest->id, 'value' => substr($guestQrCode, 0, 50) . '...']); 
-        
-        return redirect()->route('events.guestQrCode', ['event' => $event->id, 'guest' => $guest->id]);
+        try {
+            // Merging validated data with event ID
+            $guestData = [
+                'event_id' => $event->id,
+                'form_data' => json_encode($validatedData)
+            ];
+
+            // Creating guest entry
+            $guest = Guest::create($guestData);
+            \Log::info('Guest saved successfully:', ['guest' => $guest->toArray()]);
+
+            return redirect()->route('guests.viewGuest', ['guest' => $guest->id]);
+        } catch (\Exception $e) {
+            \Log::error('Error saving guest:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['error' => 'Error saving guest data'], 500);
+        }
     }
 
-    public function showGuestQrCode(Event $event, Guest $guest) 
-    { 
-        // Retrieved the generated guest QR code from Redis
-        $redisGuestKey = 'guest_qr_code_' . $guest->id;
-        $guestQrCode = Redis::get($redisGuestKey);
-
-        // Check if the guest QR code was retrieved 
-        if ($guestQrCode) { 
-            Log::info('Guest QR code retrieved from Redis', [
-                'guestId' => $guest->id,
-                'guestQrCode' => substr($guestQrCode, 0, 50) . '...',
-                'fullQrCode' => $guestQrCode
-            ]); 
-        } else { 
-            Log::error('Failed to retrieve guest QR code from Redis', ['guestId' => $guest->id]); 
-            return back()->withErrors(['qrCode' => 'Failed to retrieve guest QR code.']); 
-        } 
-
-        return Inertia::render('Guests/GuestQrCode', [ 
-            'guest' => $guest, 
-            'qrCode' => $guestQrCode
-        ]);
-    }
-
-    public function viewGuest(Event $event, Guest $guest)
-    {
-        return Inertia::render('Guests/ViewGuest', [
-            'event' => $event,
-            'guest' => $guest
-        ]);
-    }
 
     public function editGuest(Guest $guest)
     {

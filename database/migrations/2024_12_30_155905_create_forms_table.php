@@ -13,14 +13,11 @@ return new class extends Migration
     {
         Schema::create('forms', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id'); 
-            $table->unsignedBigInteger('event_id'); 
-            $table->string('title'); 
+            $table->string('title');
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
             $table->json('fields');
             $table->timestamps();
-
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade'); 
-            $table->foreign('event_id')->references('id')->on('events')->onDelete('cascade');
         });
     }
 

@@ -31,11 +31,10 @@
             </div>
             <div v-if="dropdownOpen" class="mt-4">
                 <ul class="field-selection">
-                    <li v-for="(field, key, index) in allFields" :key="key" class="flex justify-between items-center mb-2">
+                    <li v-for="(field, key) in allFields" :key="key" class="flex justify-between items-center mb-2">
                         <span>{{ field.label }}</span>
                         <button type="button" @click="addField(key)" class="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-green-600">+</button>
                     </li>
-                    <hr v-if="index !== Object.keys(allFields).length - 1" class="separator my-2"/>
                 </ul>
             </div>
         </div>
@@ -46,10 +45,9 @@
     </div>
 </template>
 
-
 <script>
 import { reactive, ref, onMounted } from 'vue';
-import { Inertia } from '@inertiajs/inertia';
+import axios from 'axios';
 
 export default {
     props: {
@@ -70,79 +68,38 @@ export default {
         const fields = reactive([...props.formFields]);
         const dragIndex = ref(null);
         const dropdownOpen = ref(false);
+        const allFields = reactive({});
 
-        const allFields = reactive({
-            company: { label: 'Company', type: 'text', placeholder: 'Enter company name', name: 'company' },
-            jobTitle: { label: 'Job Title', type: 'text', placeholder: 'Enter job title', name: 'jobTitle' },
-            topicsOfInterest: { label: 'Topics of Interest', type: 'textarea', placeholder: 'Enter topics of interest', name: 'topicsOfInterest' },
-            linkedIn: { label: 'LinkedIn Profile', type: 'url', placeholder: 'Enter LinkedIn profile URL', name: 'linkedIn' },
-            website: { label: 'Website', type: 'url', placeholder: 'Enter website URL', name: 'website' }, 
-            gender: { label: 'Gender', type: 'select', options: ['Male', 'Female', 'Non-Binary'], name: 'gender' },
-            preferredDate: { label: 'Preferred Date', type: 'date', placeholder: 'Select preferred date', name: 'preferredDate' }, 
-            preferredTime: { label: 'Preferred Time', type: 'time', placeholder: 'Select preferred time', name: 'preferredTime' },
-            phone: { label: 'Phone', type: 'tel', placeholder: 'Enter phone number', name: 'phone' }, 
-            address: { label: 'Address', type: 'text', placeholder: 'Enter address', name: 'address' }, 
-            zipCode: { label: 'Zip Code', type: 'text', placeholder: 'Enter zip code', name: 'zipCode' }, 
-            country: { label: 'Country', type: 'select', options: ['Country1', 'Country2', 'Country3'], name: 'country' }, 
-            contactMethod: { label: 'Preferred Contact Method', type: 'select', options: ['Email', 'Phone', 'SMS'], name: 'contactMethod' }, 
-            emergencyContact: { label: 'Emergency Contact', type: 'tel', placeholder: 'Enter emergency contact number', name: 'emergencyContact' },
-            dietaryRestrictions: { label: 'Dietary Restrictions', type: 'text', placeholder: 'Enter any dietary restrictions', name: 'dietaryRestrictions' },
-            sessionPreferences: { label: 'Session Preferences', type: 'select', options: ['Morning Session', 'Afternoon Session', 'Networking Event'], name: 'sessionPreferences' },
-            foodPrefernces: { label: 'Food Preferences', type: 'select', options: ['Vegetarian', 'Non-Vegetarian', 'Vegan'], name: 'foodPreferences' }, 
-            musicRequests: { label: 'Music Requests', type: 'textarea', placeholder: 'Enter your music requests', name: 'musicRequests' }, 
-            allergies: { label: 'Allergies', type: 'textarea', placeholder: 'Enter any allergies', name: 'allergies' }
+        // Fetching allFields from server
+        onMounted(async () => {
+            try {
+                const response = await axios.get('/api/fields');
+                Object.assign(allFields, response.data);
+                console.log('All fields loaded:', allFields);
+                loadCategoryForm();
+            } catch (error) {
+                console.error('Error fetching all fields:', error.response || error.message);
+            }
         });
 
-        const fieldConfigs = reactive({
-            meeting: [
-                { label: 'Name', type: 'text', placeholder: 'Enter name', name: 'name' },
-                { label: 'Sex', type: 'text', placeholder: 'Enter sex', name: 'sex' },
-                { label: 'Phone', type: 'tel', placeholder: 'Enter phone number', name: 'phone' },
-                { label: 'Email', type: 'email', placeholder: 'Enter email', name: 'email' },
-                { label: 'Attendee Type', type: 'select', options: ['Speaker', 'Participant', 'Organizer'], name: 'attendeeType' }
-            ],
-            party: [
-                { label: 'Name', type: 'text', placeholder: 'Enter name', name: 'name' },
-                { label: 'Sex', type: 'text', placeholder: 'Enter sex', name: 'sex' },
-                { label: 'Phone', type: 'tel', placeholder: 'Enter phone number', name: 'phone' },
-                { label: 'Email', type: 'email', placeholder: 'Enter email', name: 'email' },
-                { label: 'Plus One or More', type: 'number', placeholder: 'Enter number of plus ones', name: 'plusOne' },
-            ],
-            appointment: [
-                { label: 'Name', type: 'text', placeholder: 'Enter name', name: 'name' },
-                { label: 'Sex', type: 'text', placeholder: 'Enter sex', name: 'sex' },
-                { label: 'Phone', type: 'tel', placeholder: 'Enter phone number', name: 'phone' },
-                { label: 'Email', type: 'email', placeholder: 'Enter email', name: 'email' },
-                { label: 'Reason for Appointment', type: 'textarea', placeholder: 'Enter reason for appointment', name: 'reasonForAppointment' }, 
-            ],
-            reservation: [
-                { label: 'Name', type: 'text', placeholder: 'Enter name', name: 'name' },
-                { label: 'Sex', type: 'text', placeholder: 'Enter sex', name: 'sex' },
-                { label: 'Phone', type: 'tel', placeholder: 'Enter phone number', name: 'phone' },
-                { label: 'Email', type: 'email', placeholder: 'Enter email', name: 'email' },
-                { label: 'Number of Guests', type: 'number', placeholder: 'Enter number of guests', name: 'numberOfGuests' }
-            ]
-        });
-
-        // Load default form fields based on event category
-        onMounted(() => {
-            console.log('Props received:', props.event, props.eventId); // Add log statement
-            loadCategoryForm();
-        });
-
-        function loadCategoryForm() {
+        async function loadCategoryForm() {
             if (!props.event || !props.event.category) {
                 console.error('Event category is missing or undefined'); // Add error check
                 return;
             }
             const category = props.event.category.toLowerCase();
             console.log('Loading fields for category:', category);
-            const defaultFields = fieldConfigs[category] || [];
-            defaultFields.forEach(field => {
-                fields.push(field);
-                delete allFields[field.name];
-            });
-            console.log('Form fields loaded:', fields);
+            try {
+                const response = await axios.get(`/api/fields/category/${category}`);
+                const defaultFields = response.data || [];
+                defaultFields.forEach(field => {
+                    fields.push(field);
+                    delete allFields[field.name];
+                });
+                console.log('Form fields loaded:', fields);
+            } catch (error) {
+                console.error('Error loading category fields:', error.response || error.message);
+            }
         }
 
         function addField(fieldKey) {
@@ -194,18 +151,6 @@ export default {
             emit('confirm', fields);
         }
 
-        // Fetch field properties using the getFieldProperties method from the EventController 
-        async function getFieldProperties(fieldName) {
-            try {
-                const response = await Inertia.get(`/api/fields/${fieldName}`);
-                return response.props.fieldsProperties;
-            } catch (error) {
-                console.error('Error fetching field properties:', error);
-                return null;
-            }
-        }
-        
-
         return {
             fields,
             dragIndex,
@@ -217,13 +162,11 @@ export default {
             dragEnter,
             dragEnd,
             toggleDropdown,
-            confirmFields,
-            getFieldProperties
+            confirmFields
         };
     }
 };
 </script>
-
 
 <style scoped>
 .selected-fields-container {

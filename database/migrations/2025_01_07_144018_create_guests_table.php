@@ -11,11 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('custom_forms', function (Blueprint $table) {
+        Schema::create('guests', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
-            $table->foreignId('event_id')->constrained()->onDelete('cascade'); 
-            $table->jsonb('form_data');
+            $table->foreignId('event_id')->constrained()->onDelete('cascade');
+            $table->json('form_data'); // JSON column to store form data
             $table->timestamps();
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('custom_forms');
+        Schema::dropIfExists('guests');
     }
 };

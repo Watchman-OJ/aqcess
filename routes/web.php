@@ -39,12 +39,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/events/{event}/guest-list', [EventController::class, 'guestList'])->name('events.guestList');
     Route::get('/events/{event}/select-form', [EventController::class, 'selectForm'])->name('events.selectForm');
     Route::get('/events/{event}/form/{form}', [EventController::class, 'viewForm'])->name('viewForm');
-    // Route::get('/api/fields/{fieldName}', [EventController::class, 'getFieldProperties']);
-    Route::post('/events/{event}/form-handler', [EventController::class, 'handleSubmit'])->name('events.handleSubmit');
     Route::get('/events/{event}/form-handler', [EventController::class, 'formHandler'])->name('events.formHandler');
-    Route::get('/events/{event}/add-guest-method', [EventController::class, 'AddGuestMethod'])->name('events.addGuestMethod');
-    // Route::post('/events/{event}/add-guest', [EventController::class, 'storeGuest'])->name('events.storeGuest');
-    Route::get('/events/{event}/guest/{guest}/qr-code', [EventController::class, 'showGuestQrCode'])->name('events.guestQrCode');
+    Route::get('/api/fields', [EventController::class, 'getAllFields']); 
+    Route::get('/api/fields/category/{category}', [EventController::class, 'getCategoryFields']);
+    Route::post('/events/{event}/form-handler', [EventController::class, 'storeForm'])->name('formHandler');
+    Route::post('/events/{event}/guests', [EventController::class, 'saveGuest'])->name('saveGuest');
+    Route::get('/events/{event}/guest/{guest}/ticket', [EventController::class, 'guestTicket'])->name('guest.guestTicket');
     Route::get('/events/{event}/guest/{guest}', [EventController::class, 'viewGuest'])->name('events.viewGuest');
     Route::get('/events/edit-guest/{guest}', [EventController::class, 'editGuest'])->name('events.editGuest');
     Route::delete('/events/delete-guest/{event}/{guest}', [EventController::class, 'destroyGuest'])->name('events.deleteGuest');

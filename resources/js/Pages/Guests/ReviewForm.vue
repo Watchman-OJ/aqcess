@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div class="container mx-auto p-4">
         <h2 class="text-2xl font-bold mb-4">Review Form</h2>
         <div class="form-card p-6 shadow-lg rounded-lg bg-white mb-4">
@@ -33,7 +33,7 @@ export default {
 
         onMounted(() => {
             props.formFields.forEach(field => {
-                formData[field.name] = ''; // Initialize with empty or default values if available
+                formData[field.name] = ''; 
             });
         });
 
@@ -75,5 +75,58 @@ export default {
     justify-content: start;
     color: #333;
 }
+</style> -->
+<template>
+    <div class="container mx-auto p-4">
+        <h2 class="text-2xl font-bold mb-4">{{ formTitle }}</h2>
+        <div v-for="(field, index) in formFields" :key="index" class="mb-4">
+            <label :for="field.name" class="block mb-1 font-bold">{{ field.label }}</label>
+            <input 
+                v-if="field.type !== 'textarea' && field.type !== 'select'" 
+                :type="field.type" 
+                :placeholder="field.placeholder" 
+                :name="field.name" 
+                class="w-full p-2 border border-gray-300 rounded" 
+                readonly 
+            />
+            <textarea 
+                v-if="field.type === 'textarea'" 
+                :placeholder="field.placeholder" 
+                :name="field.name" 
+                class="w-full p-2 border border-gray-300 rounded"
+                readonly
+            />
+            <select 
+                v-if="field.type === 'select'" 
+                :name="field.name" 
+                class="w-full p-2 border border-gray-300 rounded"
+                disabled
+            >
+                <option v-for="option in field.options" :key="option" :value="option">{{ option }}</option>
+            </select>
+        </div>
+        <div class="flex justify-end mt-6">
+            <button @click="$emit('save')" class="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700">Save Form</button>
+        </div>
+    </div>
+</template>
+
+<script>
+export default {
+    props: {
+        formTitle: {
+            type: String,
+            required: true
+        },
+        formFields: {
+            type: Array,
+            required: true
+        }
+    }
+};
+</script>
+
+<style scoped>
+/* Add your styles here */
 </style>
 

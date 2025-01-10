@@ -11,6 +11,11 @@
                 >
                     <h3 class="text-xl font-bold mb-2">{{ form.title }}</h3>
                 </Link>
+                <Link :href="route('events.formHandler', { event: eventId })" class="create-form-link">
+                    <button class="absolute top-12 right-2 bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700 mt-4">
+                        Create Form
+                    </button>
+                </Link> 
             </div>
             <div v-else class="flex flex-col items-center justify-center h-full">
                 <p class="mt-4 text-lg text-gray-500">You do not have any form created</p>
@@ -55,6 +60,11 @@ export default {
 .form-card {
     position: relative;
     overflow: hidden;
+}
+.create-form-link { 
+    position: absolute; 
+    top: 12px; 
+    right: 2px; 
 }
 .form-preview {
     height: 100px;

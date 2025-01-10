@@ -5,13 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Form extends Model
+class FormField extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['title', 'user_id', 'event_id', 'fields'];
+    protected $fillable = ['name', 'label', 'type', 'placeholder', 'option'];
 
     protected $casts = [
-        'fields' => 'array'
+        'options' => 'array'
     ];
 }

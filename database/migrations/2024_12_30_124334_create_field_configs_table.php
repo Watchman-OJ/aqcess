@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('guests', function (Blueprint $table) {
-            $table->binary('id', 16)->primary()->first();
+        Schema::create('field_configs', function (Blueprint $table) {
+            $table->id();
+            $table->string('category');
+            $table->json('fields');
+            $table->timestamps();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('guests', function (Blueprint $table) {
-            $table->dropColumn('id');
-        });       
+        Schema::dropIfExists('field_configs');
     }
 };

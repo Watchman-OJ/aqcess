@@ -2,28 +2,20 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasVersion7Uuids;
+// use Illuminate\Database\Eloquent\Concerns\HasVersion7Uuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 
 class Guest extends Model
 {
-    use HasVersion7Uuids;
+    use HasFactory;
 
-    public $incrementing = false;
-    protected $keyType = 'string';
-
-    protected $fillable = [
-        'event_id',
-        'name',
-        'sex',
-        'guest_cap',
-        'note',
-    ];
+    protected $fillable = ['event_id', 'form_data'];
 
     
-    public function event()
+    public function setFillable(array $fields)
     {
-        return $this->belongsTo(Event::class);
+        $this->fillable = $fields;
     }
 }
