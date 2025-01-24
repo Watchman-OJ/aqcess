@@ -6,6 +6,8 @@ import InputLabel from '@/Components/InputLabel.vue';
 import PrimaryButton from '@/Components/PrimaryButton.vue';
 import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import axios from 'axios';
 
 defineProps({
     canResetPassword: {
@@ -22,10 +24,33 @@ const form = useForm({
     remember: false,
 });
 
-const submit = () => {
-    form.post(route('login'), {
-        onFinish: () => form.reset('password'),
-    });
+const errors = ref({});
+
+const submit = async () => {
+    try {
+        await axios.post('/login', {
+            email: form.email,
+            password: form.password,
+            remember: form.remember,
+        }, {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        });
+
+        // Optionally, redirect or perform other actions after successful login
+        console.log("Logged in successfully");
+    } catch (error) {
+        if (error.response && error.response.data) {
+            errors.value = error.response.data.errors || {};
+            console.error('Login failed:', error.response.data.message);
+        } else {
+            console.error('An unexpected error occurred:', error);
+        }
+    } finally {
+        form.reset('password');
+    }
 };
 </script>
 
@@ -51,7 +76,7 @@ const submit = () => {
                     autocomplete="username"
                 />
 
-                <InputError class="mt-2" :message="form.errors.email" />
+                <InputError class="mt-2" :message="errors.email" />
             </div>
 
             <div class="mt-4">
@@ -66,15 +91,15 @@ const submit = () => {
                     autocomplete="current-password"
                 />
 
-                <InputError class="mt-2" :message="form.errors.password" />
+                <InputError class="mt-2" :message="errors.password" />
             </div>
 
             <div class="mt-4 block">
                 <label class="flex items-center">
                     <Checkbox name="remember" v-model:checked="form.remember" />
-                    <span class="ms-2 text-sm text-gray-600"
-                        >Remember me</span
-                    >
+                    <span class="ms-2 text-sm text-gray-600">
+                        Remember me
+                    </span>
                 </label>
             </div>
 

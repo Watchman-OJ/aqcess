@@ -46,11 +46,8 @@ class EventController extends Controller
         $validateData = $request->validate([ 
             'title' => 'required|string|max:255', 
             'category' => 'required|string|max:255',
-            'eventType' => 'required|string',
             'startDate' => 'required|date', 
-            'startTime' => 'nullable|date_format:H:i', 
-            'eventDays' => 'required_if:eventType,multiple|array',
-            'timezone' => 'required|string',
+            'startTime' => 'nullable|date_format:H:i',
             'location' => 'nullable|string|max:255',
         ]); 
 
@@ -64,10 +61,6 @@ class EventController extends Controller
             'user_id' => auth()->id(),
             ...$validateData,
         ]); 
-
-        // Generate QR code and cache it if the check-in ption is QR Code
-        $qrCode = $this->qrCodeService->generateEventQrCode(route('events.verify', $event->id));
-        Redis::set('event_qr_code_' . $event->id, base64_encode($qrCode));
 
         return response()->json([
             'id' => $event->id,
@@ -151,6 +144,7 @@ class EventController extends Controller
 
         $request->validate([ 
             'title' => 'required|string|max:255', 
+            'category' => 'required|string|max:255',
             'startDate' => 'required|date', 
             'endDate' => 'nullable|date',
             'startTime' => 'nullable|date_format:H:i', 

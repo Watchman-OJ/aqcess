@@ -16,7 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
         ]);
 
-        //
+        $middleware->api(append: [
+            \Laravel\Sanctum\Http\Middleware\EnsureFrontEndRequestsAreStateful::class,
+            'throttle:api',
+            \Illuminate\Routing\Middleware\SubstituteBindings::class,
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

@@ -10,19 +10,12 @@
       <p>{{ eventDetails.category }}</p>
     </div>
     <div class="mb-4">
-      <label class="block text-sm font-medium text-gray-700">Event Scheduling</label>
-      <p v-if="eventDetails.eventType === 'single'">Single Day Event</p>
-      <p v-if="eventDetails.eventType === 'multiple'">Multiple Day Event</p>
-      <div v-if="eventDetails.eventType === 'single'">
-        <p>Start: {{ eventDetails.startDate }}</p>
-        <p>Start Time: {{ eventDetails.startTime }}</p>
-        <p>Timezone: {{ eventDetails.timezone }}</p>
-      </div>
-      <div v-if="eventDetails.eventType === 'multiple'">
-        <p>Days: {{ eventDetails.eventDays.join(', ') }}</p>
-        <p>Start Time: {{ eventDetails.startTime }}</p>
-        <p>Timezone: {{ eventDetails.timezone }}</p>
-      </div>
+      <label class="block text-sm font-medium text-gray-700">Date</label>
+      <p>{{ eventDetails.startDate }}</p>
+    </div>
+    <div class="mb-4">
+      <label class="block text-sm font-medium text-gray-700">Time</label>
+      <p>{{ eventDetails.startTime }}</p>
     </div>
     <div class="mb-4">
       <label class="block text-sm font-medium text-gray-700">Location</label>

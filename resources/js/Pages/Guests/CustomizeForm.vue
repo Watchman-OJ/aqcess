@@ -84,7 +84,7 @@ export default {
 
         async function loadCategoryForm() {
             if (!props.event || !props.event.category) {
-                console.error('Event category is missing or undefined'); // Add error check
+                console.error('Event category is missing or undefined');
                 return;
             }
             const category = props.event.category.toLowerCase();

@@ -16,11 +16,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
             $table->string('title'); 
             $table->string('category');
-            $table->string('eventType');
-            $table->json('eventDays')->nullable();
             $table->date('startDate');  
-            $table->time('startTime')->nullable(); 
-            $table->string('timezone')->nullable();
+            $table->time('startTime')->nullable();
             $table->string('location')->nullable();
             $table->timestamps();
         });

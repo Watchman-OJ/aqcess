@@ -11,10 +11,14 @@
                     <img :src="localQrCode" alt="QR Code">
                 </div>
                 <div class="ticket-body">
+                    <h3>{{ guest.form_data.name }}</h3>
+                    <h3>Location</h3>
+                    <p> {{ event.location }} </p>
                     <h3>Date</h3>
                     <p> {{ event.startDate }} </p>
                     <h3>Time</h3>
                     <p> {{ event.startTime }} </p>
+
                 </div>
             </div>
         </div>
@@ -23,7 +27,6 @@
 
 <script>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { ref } from 'vue';
 
 export default {
     components: {

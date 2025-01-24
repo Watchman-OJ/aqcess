@@ -30,7 +30,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'; 
 import EventTitle from './EventTitle.vue'; 
 import EventCategory from './EventCategory.vue'; 
-import EventScheduling from './EventScheduling.vue'; 
+import EventSchedule from './EventSchedule.vue'; 
 import EventLocation from './EventLocation.vue'; 
 import ReviewSubmit from './ReviewSubmit.vue';
 import axios from 'axios';
@@ -40,7 +40,7 @@ export default {
         AuthenticatedLayout, 
         EventTitle, 
         EventCategory, 
-        EventScheduling, 
+        EventSchedule, 
         EventLocation, 
         ReviewSubmit, 
 
@@ -52,10 +52,7 @@ export default {
             eventDetails: { 
                 title: '', 
                 category: '', 
-                eventType: '', 
                 startDate: '', 
-                timezone: '', 
-                eventDays: [], 
                 startTime: '', 
                 location: '', 
             }
@@ -71,7 +68,7 @@ export default {
             switch (this.currentStep) { 
                 case 0: return EventTitle; 
                 case 1: return EventCategory; 
-                case 2: return EventScheduling; 
+                case 2: return EventSchedule; 
                 case 3: return EventLocation; 
                 case 4: return ReviewSubmit; 
                 default: 
@@ -100,11 +97,8 @@ export default {
             if ( 
                 !eventDetails.title || 
                 !eventDetails.category || 
-                !eventDetails.eventType || 
-                (eventDetails.eventType === 'single' && (!eventDetails.startDate)) || 
-                (eventDetails.eventType === 'multiple' && (!eventDetails.eventDays.length)) ||
+                !eventDetails.startDate ||
                 !eventDetails.startTime ||
-                !eventDetails.timezone || 
                 !eventDetails.location 
             ) { 
                 console.error('Validation Error: Missing required fields'); 

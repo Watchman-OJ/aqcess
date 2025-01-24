@@ -7,6 +7,10 @@ use Inertia\Inertia;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\ReportController;
+use Illuminate\Http\Request; 
+use Illuminate\Support\Facades\Hash; 
+use App\Models\User;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -40,8 +44,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/events/{event}/select-form', [EventController::class, 'selectForm'])->name('events.selectForm');
     Route::get('/events/{event}/form/{form}', [EventController::class, 'viewForm'])->name('viewForm');
     Route::get('/events/{event}/form-handler', [EventController::class, 'formHandler'])->name('events.formHandler');
-    Route::get('/api/fields', [EventController::class, 'getAllFields']); 
-    Route::get('/api/fields/category/{category}', [EventController::class, 'getCategoryFields']);
     Route::post('/events/{event}/form-handler', [EventController::class, 'storeForm'])->name('formHandler');
     Route::post('/events/{event}/guests', [EventController::class, 'saveGuest'])->name('saveGuest');
     Route::get('/events/{event}/guest/{guest}/ticket', [EventController::class, 'guestTicket'])->name('guest.guestTicket');
@@ -50,13 +52,25 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/events/delete-guest/{event}/{guest}', [EventController::class, 'destroyGuest'])->name('events.deleteGuest');
 }); 
 
-Route::middleware(['auth'])->group(function () { 
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::post('/register', [AuthController::class, 'register']); 
+    Route::post('/login', [AuthController::class, 'login']); 
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user', function (Request $request) {
+        return $request->user();
+    });
+    Route::get('/api/fields', [EventController::class, 'getAllFields']);
+    Route::get('/api/fields/category/{category}', [EventController::class, 'getCategoryFields']);
+});
+
+    Route::middleware(['auth'])->group(function () { 
     Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
 });
 
 Route::middleware(['auth'])->group(function () { 
     Route::get('/report-issue', [ReportController::class, 'index'])->name('report_issue.index'); 
 });
+
 
 
     
