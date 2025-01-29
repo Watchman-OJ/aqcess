@@ -120,6 +120,8 @@ class EventController extends Controller
         // Retrieve QR Code from redis if available
         $qrCode = $this->getQrCodeForEvent($event);
 
+        $guest->form_data = json_decode($guest->form_data, true);
+
         return Inertia::render('Guests/GuestTicket', [
             'event' => $event,
             'guest' => $guest,
@@ -193,11 +195,14 @@ class EventController extends Controller
 
     public function getAllFields()
     {
+        \Log::info('Entering getAllFields method');
         try {
             $allFields = FormField::all()->keyBy('name');
+            \Log::info('Fetched all fields', ['fields' => $allFields]);
 
             return response()->json($allFields);
         } catch (\Exception $e) {
+            \Log::error('Error in getAllFields method', ['error' => $e->getMessage()]);
             return response()->json(['error' => $e->getMessage()], 500);
         }
         
@@ -206,17 +211,23 @@ class EventController extends Controller
     public function getCategoryFields($category)
     {
         try {
+            \Log::info('Entering getCategoryFields method', ['category' => $category]);
             $fieldConfig = FieldConfig::where('category', $category)->first();
+
             if ($fieldConfig) {
+                \Log::info('FieldConfig found', ['fieldConfig' => $fieldConfig]);
                 $fields = json_decode($fieldConfig->fields, true);
+                \Log::info('Decoded fields', ['fields' => $fields]);
+
                 return response()->json($fields);
             } else {
+                \Log::warning('Category fields not found', ['category' => $category]);
                 return response()->json(['error' => 'Category fields not found'], 404);
             }
         } catch (\Exception $e) {
+            \Log::error('Error in getCategoryFields method', ['error' => $e->getMessage()]);
             return response()->json(['error' => $e->getMessage()], 500);
         }
-        
     }
 
     public function storeForm(Request $request)
@@ -342,7 +353,6 @@ class EventController extends Controller
             return response()->json(['error' => 'Error saving guest data'], 500);
         }
     }
-
 
     public function editGuest(Guest $guest)
     {

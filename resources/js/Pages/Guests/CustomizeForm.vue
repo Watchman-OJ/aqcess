@@ -49,6 +49,11 @@
 import { reactive, ref, onMounted } from 'vue';
 import axios from 'axios';
 
+// Configure Axios defaults
+axios.defaults.withCredentials = true; // Ensure cookies are sent
+axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
+axios.defaults.headers.common['X-CSRF-TOKEN'] = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
 export default {
     props: {
         event: {

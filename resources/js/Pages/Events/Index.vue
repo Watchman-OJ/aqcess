@@ -21,8 +21,9 @@
                 class="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 cursor-pointer">
                 <Link :href="route('events.show', event.id)">
                     <h2 class="text-xl font-bold mb-2">{{ event.title }}</h2>
-                    <p class="text-gray-600"><strong>Time:</strong> {{ event.startTime }}</p>
                     <p class="text-gray-600"><strong>Location:</strong> {{ event.location }}</p>
+                    <p class="text-gray-600"><strong>Date:</strong> {{ event.startDate }}</p>
+                    <p class="text-gray-600"><strong>Time:</strong> {{ event.startTime }}</p>
                 </Link>             
                 </div>
             </div>

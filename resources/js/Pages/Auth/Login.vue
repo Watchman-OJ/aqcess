@@ -8,6 +8,9 @@ import TextInput from '@/Components/TextInput.vue';
 import { Head, Link, useForm } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import axios from 'axios';
+import { useRouter } from 'vue-router'; 
+
+const router = useRouter(); 
 
 defineProps({
     canResetPassword: {
@@ -28,7 +31,7 @@ const errors = ref({});
 
 const submit = async () => {
     try {
-        await axios.post('/login', {
+        const response = await axios.post('/login', {
             email: form.email,
             password: form.password,
             remember: form.remember,
@@ -39,7 +42,11 @@ const submit = async () => {
             }
         });
 
-        // Optionally, redirect or perform other actions after successful login
+        if (response.status === 200) {
+            // Redirect to dashboard
+            router.push({ name: 'AuthenticatedLayout' });
+        }
+
         console.log("Logged in successfully");
     } catch (error) {
         if (error.response && error.response.data) {

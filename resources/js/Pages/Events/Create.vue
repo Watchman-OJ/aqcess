@@ -3,7 +3,6 @@
         <div class="container mx-auto p-4">
             <!-- <h1 class="text-3xl font-bold mb-4">Create Event</h1> -->
             <div class="progress-container">
-                <div class="progress-bar" :style="{ width: progressWidth }"></div>
                 <div class="progress-steps">
                     <div
                     v-for="(step, index) in steps"
@@ -47,7 +46,7 @@ export default {
     }, 
     data() { 
         return { 
-            steps: ['Event Title', 'Category', 'Event Scheduling', 'Event Location', 'Review and Submit'], 
+            steps: ['Title', 'Category', 'Scheduling', 'Location', 'Submit'], 
             currentStep: 0, 
             eventDetails: { 
                 title: '', 
@@ -138,11 +137,6 @@ export default {
     display: flex;
     flex-direction: column;
     margin-bottom: 20px;
-}
-.progress-bar {
-    height: 5px;
-    background-color: #4a904a;
-    transition: width 0.3s;
 }
 .progress-steps {
     display: flex;

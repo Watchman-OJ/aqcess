@@ -59,8 +59,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-    Route::get('/api/fields', [EventController::class, 'getAllFields']);
-    Route::get('/api/fields/category/{category}', [EventController::class, 'getCategoryFields']);
 });
 
     Route::middleware(['auth'])->group(function () { 

@@ -18,12 +18,14 @@
                         Add Guest 
                     </button> 
                 </Link>
-                <ul> 
-                    <li v-for="guest in guests" :key="guest.id" class="mt-4" > 
-                        <div class="cursor-pointer" @click="viewGuest(guest)"> 
-                            <p><strong>{{ guest.form_data.name }}</strong></p> 
-                            
+                <ul class="guests"> 
+                    <li v-for="guest in guests" :key="guest.id" @click="viewGuest(guest)" class="guest-list cursor-pointer"> 
+                        <div class="flex justify-between items-center"> 
+                            <p><strong>{{ guest.form_data.name }}</strong></p>
                         </div> 
+                        <div class="text-sm text gray-400">
+                            <p class="text-sm text-gray-400"> {{ formatDateTime(guest.created_at) }} </p>
+                        </div>
                     </li> 
                 </ul> 
             </div> 
@@ -35,6 +37,7 @@
 import { Link } from '@inertiajs/inertia-vue3'; 
 import { Inertia } from '@inertiajs/inertia'; 
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { format } from 'date-fns';
 
 export default { 
     components: { 
@@ -58,7 +61,43 @@ export default {
     methods: { 
         viewGuest(guest) { 
             Inertia.get(route('events.viewGuest', { event: this.event.id, guest: guest.id })); 
-        } 
+        },
+        formatDateTime(dateTime) {
+            return format(new Date(dateTime), 'MMM dd, yyyy h:mm a');
+        }
     } 
 } 
 </script>
+
+
+<style scoped>
+.container {
+    background-color: #f7fafc;
+    padding: 32px;
+    margin: 70px auto;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.guests {
+    list-style-type: none;
+    padding: 0;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+}
+
+.guest-list {
+    position: relative;
+    padding: 10px 0;
+}
+
+.guest-list::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: #ccc; 
+}
+</style>
