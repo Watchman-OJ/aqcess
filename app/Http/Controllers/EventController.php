@@ -28,7 +28,8 @@ class EventController extends Controller
         $this->qrCodeService = $qrCodeService;
     }
 
-    public function index() { 
+    public function index() 
+    { 
         $events = Event::where('user_id', auth()->id())->get(); 
         return Inertia::render('Events/Index', [ 
             'events' => $events, 
@@ -347,7 +348,7 @@ class EventController extends Controller
             $guest = Guest::create($guestData);
             \Log::info('Guest saved successfully:', ['guest' => $guest->toArray()]);
 
-            return redirect()->route('guests.viewGuest', ['guest' => $guest->id]);
+            return redirect()->route('events.guestList', ['event' => $event->id, 'guest' => $guest->id]);
         } catch (\Exception $e) {
             \Log::error('Error saving guest:', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json(['error' => 'Error saving guest data'], 500);
@@ -373,6 +374,6 @@ class EventController extends Controller
 
         $event->delete(); 
 
-        return redirect()->route('events.index'); 
+        return redirect()->route('dashboard'); 
     }
 }

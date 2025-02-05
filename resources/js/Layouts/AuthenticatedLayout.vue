@@ -40,16 +40,10 @@ const showingNavigationDropdown = ref(false);
                                     Dashboard
                                 </NavLink>
                                 <NavLink
-                                    :href="route('events.index')"
-                                    :active="route().current('events.index')"
+                                    :href="route('dashboard')"
+                                    :active="route().current('dashboard')"
                                 >
                                     Events
-                                </NavLink>
-                                <NavLink
-                                    :href="route('partners.index')"
-                                    :active="route().current('partners.index')"
-                                >
-                                    Trusted Partners
                                 </NavLink>
                                 <NavLink
                                     :href="route('report_issue.index')"
@@ -165,16 +159,10 @@ const showingNavigationDropdown = ref(false);
                             Dashboard
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
-                            :href="route('events.index')"
-                            :active="route().current('events.index')"
+                            :href="route('dashboard')"
+                            :active="route().current('dashboard')"
                         >
                             Events
-                        </ResponsiveNavLink>
-                        <ResponsiveNavLink
-                            :href="route('partners.index')"
-                            :active="route().current('partners.index')"
-                        >
-                            Trusted Partners
                         </ResponsiveNavLink>
                         <ResponsiveNavLink
                             :href="route('report_issue.index')"

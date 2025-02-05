@@ -40,7 +40,7 @@ export default {
     methods: {
         deleteGuest() {
             if (confirm('Are you sure you want to delete this guest?')) {
-                Inertia.delete(route('events.deleteGuest', { guest: this.guest.id}));
+                Inertia.delete(route('events.deleteGuest', { event: this.event.id, guest: this.guest.id }));
             }
         }
     },

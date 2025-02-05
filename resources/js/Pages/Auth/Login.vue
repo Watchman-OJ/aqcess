@@ -29,35 +29,16 @@ const form = useForm({
 
 const errors = ref({});
 
-const submit = async () => {
-    try {
-        const response = await axios.post('/login', {
-            email: form.email,
-            password: form.password,
-            remember: form.remember,
-        }, {
-            headers: {
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        });
-
-        if (response.status === 200) {
-            // Redirect to dashboard
-            router.push({ name: 'AuthenticatedLayout' });
+const submit = () => {
+    form.post('/login', {
+        onSuccess: () => {
+            form.reset('password');
+        },
+        onError: (error) => {
+            errors.value = error.errors || {};
+            console.error('Login failed:', error.message);
         }
-
-        console.log("Logged in successfully");
-    } catch (error) {
-        if (error.response && error.response.data) {
-            errors.value = error.response.data.errors || {};
-            console.error('Login failed:', error.response.data.message);
-        } else {
-            console.error('An unexpected error occurred:', error);
-        }
-    } finally {
-        form.reset('password');
-    }
+    });
 };
 </script>
 

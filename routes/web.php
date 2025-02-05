@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash; 
 use App\Models\User;
 use App\Http\Controllers\AuthController;
+use App\Models\Event;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -22,7 +23,12 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    $events = Event::where('user_id', auth()->id())->get(); 
+
+    return Inertia::render('Dashboard', [
+        'events' => $events,
+        'hasEvents' => $events->isNotEmpty(), 
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
@@ -32,7 +38,6 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware(['auth'])->group(function () { 
-    Route::get('/events', [EventController::class, 'index'])->name('events.index'); 
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'update'])->name('events.put');
@@ -59,10 +64,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/user', function (Request $request) {
         return $request->user();
     });
-});
-
-    Route::middleware(['auth'])->group(function () { 
-    Route::get('/partners', [PartnerController::class, 'index'])->name('partners.index');
+    Route::get('/api/fields', [EventController::class, 'getAllFields']);
+    Route::get('/api/fields/category/{category}', [EventController::class, 'getCategoryFields']);
 });
 
 Route::middleware(['auth'])->group(function () { 
@@ -74,3 +77,4 @@ Route::middleware(['auth'])->group(function () {
     
 
 require __DIR__.'/auth.php';
+

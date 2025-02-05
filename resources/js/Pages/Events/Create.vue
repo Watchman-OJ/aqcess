@@ -1,7 +1,6 @@
 <template>
     <AuthenticatedLayout>
         <div class="container mx-auto p-4">
-            <!-- <h1 class="text-3xl font-bold mb-4">Create Event</h1> -->
             <div class="progress-container">
                 <div class="progress-steps">
                     <div
@@ -27,6 +26,7 @@
 
 <script>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue'; 
+import { Inertia } from '@inertiajs/inertia';
 import EventTitle from './EventTitle.vue'; 
 import EventCategory from './EventCategory.vue'; 
 import EventSchedule from './EventSchedule.vue'; 
@@ -109,11 +109,10 @@ export default {
             .then(response => {
                 console.log('Event creation response:', response);
                 if (response.data.id) {
-                    this.$router.push({
-                    name: 'events.index',
-                    params: { id: response.data.id },
-                    query: { message: 'Event created successfully' }
-                });
+                    Inertia.visit(route('dashboard'), {
+                        method: 'get',
+                        data: { message: 'Event created successfully' }
+                    });
                 } else {
                     console.error('Error creating event: No valid ID returned');
                 }
